@@ -1,6 +1,6 @@
 # Chess Stats Analyzer
 
-A Python script that analyzes chess games from Chess.com to provide statistics on opponents' countries.
+A modular Python package that analyzes chess games from Chess.com to provide statistics on opponents' countries.
 
 ## Overview
 
@@ -14,6 +14,24 @@ This tool fetches all your chess games from Chess.com, identifies your opponents
 - Handles incremental updates (only processes new games)
 - Parallel processing for efficient data fetching
 - Stores processed data locally for quick re-runs
+- Modular architecture with separate API client, caching, and processing components
+
+## Project Structure
+
+```text
+chess-stats/
+├── chess_api/           # Core package
+│   ├── __init__.py
+│   ├── client.py        # Chess.com API client functions
+│   ├── cache.py         # Data persistence utilities
+│   └── processor.py     # Main game processing logic
+├── opponent_country.py  # Main script
+├── data/                # Data storage (gitignored)
+│   ├── archives.json
+│   ├── processed_games.json
+│   └── opponent_stats.json
+└── README.md
+```
 
 ## Requirements
 
@@ -42,6 +60,51 @@ The script will:
 - Process new games and identify opponents
 - Look up countries for new opponents
 - Display aggregated statistics by country
+
+## Package Components
+
+### chess_api.client
+
+Contains functions for interacting with the Chess.com API:
+
+- `fetch_archives(username)`: Get list of game archive URLs for a player
+- `fetch_games(url)`: Fetch games from a specific archive URL
+- `fetch_country(opponent)`: Get a player's country code
+
+### chess_api.cache
+
+Handles data persistence:
+
+- `load_json(filename, default)`: Load JSON data from the data directory
+- `save_json(filename, data)`: Save JSON data to the data directory
+
+### chess_api.processor
+
+Main processing logic:
+
+- `get_opponent_country_stats(username)`: Process all games and return opponent statistics
+- `is_current_month(url)`: Check if an archive URL is for the current month
+
+## Programmatic Usage
+
+You can also import and use the package programmatically:
+
+```python
+from chess_api.processor import get_opponent_country_stats
+from collections import Counter
+
+# Get opponent statistics
+stats = get_opponent_country_stats("your_username")
+
+# Aggregate by country
+country_counter = Counter()
+for data in stats.values():
+    country_counter[data["country"]] += data["games"]
+
+# Print results
+for country, count in country_counter.most_common():
+    print(f"{country}: {count}")
+```
 
 ## Data Files
 

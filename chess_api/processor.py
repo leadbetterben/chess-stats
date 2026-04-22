@@ -8,6 +8,8 @@ ARCHIVES_FILE = "archives.json"
 GAMES_FILE = "processed_games.json"
 STATS_FILE = "opponent_stats.json"
 
+EXCLUDED_USERS = {"coach_levy"}
+
 def get_opponent_country_stats(username):
     # Load existing data
     fetched_archives = load_json(ARCHIVES_FILE, [])
@@ -41,6 +43,9 @@ def get_opponent_country_stats(username):
 
                         opponent = opponent.lower()
                         if opponent == username:
+                            continue
+
+                        if opponent in EXCLUDED_USERS:
                             continue
 
                         if opponent not in opponent_stats:

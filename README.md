@@ -20,13 +20,14 @@ This tool fetches all your chess games from Chess.com, identifies your opponents
 
 ```text
 chess-stats/
-├── chess_api/           # Core package
+├── chess_api/                 # Core package
 │   ├── __init__.py
-│   ├── client.py        # Chess.com API client functions
-│   ├── cache.py         # Data persistence utilities
-│   └── processor.py     # Main game processing logic
-├── opponent_country.py  # Main script
-├── data/                # Data storage (gitignored)
+│   ├── client.py              # Chess.com API client functions
+│   ├── cache.py               # Data persistence utilities
+│   └── processor.py           # Main game processing logic
+├── report_country_stats.py        # Analyze games by opponent country
+├── get_top_opponents.py       # Find most-played opponents
+├── data/                      # Data storage (gitignored)
 │   ├── archives.json
 │   ├── processed_games.json
 │   └── opponent_stats.json
@@ -44,22 +45,40 @@ Install dependencies:
 pip install requests
 ```
 
-## Usage
+## Available Scripts
 
-1. Clone this repository
-2. Edit `opponent_country.py` and change the `USERNAME` variable to your Chess.com username
-3. Run the script:
+### report_country_stats.py
+
+Analyzes games by opponent country:
+
+1. Fetches your game archives from Chess.com
+2. Identifies all opponents and their countries
+3. Displays aggregated statistics by country
+
+Usage:
 
 ```bash
-python opponent_country.py
+python report_country_stats.py
 ```
 
-The script will:
+### get_top_opponents.py
 
-- Fetch your game archives from Chess.com
-- Process new games and identify opponents
-- Look up countries for new opponents
-- Display aggregated statistics by country
+Finds your most-played opponents:
+
+1. Uses the opponent statistics from `report_country_stats.py`
+2. Displays the opponent(s) with the most games played
+
+Usage:
+
+```bash
+python get_top_opponents.py
+```
+
+## Setup
+
+1. Clone this repository
+2. Edit any script and change the `USERNAME` variable to your Chess.com username
+3. Run any of the scripts above
 
 ## Package Components
 
@@ -82,7 +101,7 @@ Handles data persistence:
 
 Main processing logic:
 
-- `get_opponent_country_stats(username)`: Process all games and return opponent statistics
+- `get_report_country_stats_stats(username)`: Process all games and return opponent statistics
 - `is_current_month(url)`: Check if an archive URL is for the current month
 
 ## Programmatic Usage
@@ -90,11 +109,11 @@ Main processing logic:
 You can also import and use the package programmatically:
 
 ```python
-from chess_api.processor import get_opponent_country_stats
+from chess_api.processor import get_report_country_stats_stats
 from collections import Counter
 
 # Get opponent statistics
-stats = get_opponent_country_stats("your_username")
+stats = get_report_country_stats_stats("your_username")
 
 # Aggregate by country
 country_counter = Counter()

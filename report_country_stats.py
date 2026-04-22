@@ -1,12 +1,11 @@
 from collections import Counter
 
+from cli import get_username
 from chess_api.processor import get_opponent_country_stats
 
 
-USERNAME = "benleggy23"
-
-def main():
-    opponent_stats = get_opponent_country_stats(USERNAME)
+def main(username):
+    opponent_stats = get_opponent_country_stats(username)
 
     print(f"\nUnique opponents: {len(opponent_stats)}")
 
@@ -25,4 +24,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    username = get_username()
+    main(username)

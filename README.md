@@ -20,6 +20,7 @@ This tool fetches all your chess games from Chess.com, identifies your opponents
 
 ```text
 chess-stats/
+├── cli.py                     # Command-line argument parsing utilities
 ├── chess_api/                 # Core package
 │   ├── __init__.py
 │   ├── client.py              # Chess.com API client functions
@@ -51,27 +52,63 @@ pip install requests
 
 Analyzes games by opponent country:
 
-1. Fetches your game archives from Chess.com
+1. Fetches your game archives from Chess.com or stored data
 2. Identifies all opponents and their countries
 3. Displays aggregated statistics by country
 
 Usage:
 
 ```bash
-python report_country_stats.py
+python report_country_stats.py <username>
+```
+
+Example:
+
+```bash
+python report_country_stats.py benleggy23
+```
+
+Output example:
+
+```text
+Unique opponents: 245
+
+=== RESULTS ===
+
+US: 89 (35.2%)
+RU: 45 (17.8%)
+DE: 23 (9.1%)
+...
 ```
 
 ### get_top_opponents.py
 
 Finds your most-played opponents:
 
-1. Uses the opponent statistics from `report_country_stats.py`
-2. Displays the opponent(s) with the most games played
+1. Fetches your game archives from Chess.com or stored data
+2. Identifies all opponents and games played against them
+3. Displays top opponent(s) based on games played
 
 Usage:
 
 ```bash
-python get_top_opponents.py
+python get_top_opponents.py <username>
+```
+
+Example:
+
+```bash
+python get_top_opponents.py benleggy23
+```
+
+Output example:
+
+```text
+Unique opponents: 245
+Most games against a single opponent: 12
+
+Player123: 12 games (US)
+Player456: 12 games (CA)
 ```
 
 ## Setup
@@ -134,19 +171,6 @@ The script creates and maintains several data files in the `data/` directory:
 - `opponent_stats.json`: Statistics for each opponent (country and game count)
 
 Note: The `data/` directory is gitignored to avoid committing personal game data.
-
-## Output Example
-
-```text
-Unique opponents: 245
-
-=== RESULTS ===
-
-US: 89 (35.2%)
-RU: 45 (17.8%)
-DE: 23 (9.1%)
-...
-```
 
 ## API Rate Limits
 

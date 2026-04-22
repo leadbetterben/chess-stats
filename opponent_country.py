@@ -91,9 +91,9 @@ def main():
         
         os.makedirs(os.path.dirname(OPPONENTS_FILE), exist_ok=True)
         with open(OPPONENTS_FILE, 'w') as f:
-            json.dump(list(opponents), f)
+            json.dump(list(opponents), f, indent=2)
         with open(ARCHIVES_FILE, 'w') as f:
-            json.dump(fetched_archives, f)
+            json.dump(fetched_archives, f, indent=2)
 
     countries = {}
     if os.path.exists(COUNTRIES_FILE):
@@ -117,13 +117,15 @@ def main():
                 countries[opp] = country
 
         with open(COUNTRIES_FILE, 'w') as f:
-            json.dump(countries, f)
+            json.dump(countries, f, indent=2)
 
     country_counter = Counter(countries.values())
 
     print("\n=== RESULTS ===\n")
+    total = sum(country_counter.values())
     for country, count in country_counter.most_common():
-        print(f"{country}: {count}")
+        pct = (count / total) * 100
+        print(f"{country}: {count} ({pct:.1f}%)")
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,8 @@
 import requests
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
+import os
 
 USERNAME = "benleggy23"
 
@@ -10,16 +12,16 @@ HEADERS = {
 
 BASE_URL = "https://api.chess.com/pub"
 
+OPPONENTS_FILE = "data/opponents.json"
+COUNTRIES_FILE = "data/countries.json"
 
 def get_archives():
     r = requests.get(f"{BASE_URL}/player/{USERNAME}/games/archives", headers=HEADERS)
     return r.json().get("archives", [])
 
-
 def get_games(url):
     r = requests.get(url, headers=HEADERS)
     return r.json().get("games", [])
-
 
 def extract_opponents(archives):
     opponents = set()
@@ -38,7 +40,6 @@ def extract_opponents(archives):
 
     return opponents
 
-
 def fetch_country(opponent):
     try:
         r = requests.get(f"{BASE_URL}/player/{opponent}", headers=HEADERS, timeout=10)
@@ -56,27 +57,38 @@ def fetch_country(opponent):
 
     return "Unknown"
 
-
 def main():
-    archives = get_archives()
-    opponents = extract_opponents(archives)
+    if os.path.exists(OPPONENTS_FILE):
+        with open(OPPONENTS_FILE, 'r') as f:
+            opponents = set(json.load(f))
+    else:
+        archives = get_archives()
+        opponents = extract_opponents(archives)
+        with open(OPPONENTS_FILE, 'w') as f:
+            json.dump(list(opponents), f)
 
     print(f"\nUnique opponents: {len(opponents)}")
 
-    country_counter = Counter()
+    if os.path.exists(COUNTRIES_FILE):
+        with open(COUNTRIES_FILE, 'r') as f:
+            country_data = json.load(f)
+        country_counter = Counter(country_data)
+    else:
+        country_counter = Counter()
+        # 🔥 Parallel requests
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(fetch_country, opp): opp for opp in opponents}
 
-    # 🔥 Parallel requests
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(fetch_country, opp): opp for opp in opponents}
+            for future in as_completed(futures):
+                country = future.result()
+                country_counter[country] += 1
 
-        for future in as_completed(futures):
-            country = future.result()
-            country_counter[country] += 1
+        with open(COUNTRIES_FILE, 'w') as f:
+            json.dump(dict(country_counter), f)
 
     print("\n=== RESULTS ===\n")
     for country, count in country_counter.most_common():
         print(f"{country}: {count}")
-
 
 if __name__ == "__main__":
     main()

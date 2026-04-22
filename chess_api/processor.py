@@ -8,7 +8,7 @@ ARCHIVES_FILE = "archives.json"
 GAMES_FILE = "processed_games.json"
 STATS_FILE = "opponent_stats.json"
 
-EXCLUDED_USERS = {"coach_levy"}
+EXCLUDED_USERS = ["coach-levy"]
 
 def get_opponent_country_stats(username):
     # Load existing data

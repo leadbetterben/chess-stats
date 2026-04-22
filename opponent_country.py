@@ -10,12 +10,26 @@ USERNAME = "benleggy23"
 HEADERS = {
     "User-Agent": "chess-country-stats/1.0"
 }
+session = requests.Session()
+session.headers.update(HEADERS)
 
 BASE_URL = "https://api.chess.com/pub"
 
 OPPONENTS_FILE = "data/opponents.json"
 COUNTRIES_FILE = "data/countries.json"
 ARCHIVES_FILE = "data/archives.json"
+
+def fetch_games(url):
+    print(f"Fetching games: {url}")
+    try:
+        r = session.get(url, headers=HEADERS, timeout=10)
+        if r.status_code == 200:
+            return r.json().get("games", [])
+    except Exception as e:
+        print(f"Error: exception fetching games from {url}: {e}")
+        return []
+    print(f"Error: failed to fetch games from {url}")
+    return []
 
 def is_current_month(url):
     parts = url.rstrip('/').split('/')
@@ -24,7 +38,7 @@ def is_current_month(url):
     now = datetime.datetime.now()
     return year == now.year and month == now.month
 
-def fetch_country(session, opponent):
+def fetch_country(opponent):
     try:
         r = session.get(f"{BASE_URL}/player/{opponent}", headers=HEADERS, timeout=10)
         if r.status_code != 200:
@@ -44,9 +58,6 @@ def fetch_country(session, opponent):
     return "Unknown"
 
 def main():
-    session = requests.Session()
-    session.headers.update(HEADERS)
-
     r = session.get(f"{BASE_URL}/player/{USERNAME}/games/archives", headers=HEADERS)
     archives = r.json().get("archives", [])
     fetched_archives = []
@@ -63,14 +74,15 @@ def main():
     
     if new_archives:
         new_opponents = set()
-        for url in new_archives:
-            print(f"Fetching games: {url}")
-            r = session.get(url, headers=HEADERS)
-            games =  r.json().get("games", [])
-            for game in games:
-                for side in ["white", "black"]:
-                    player = game.get(side)
-                    if player:
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            games = list(executor.map(fetch_games, new_archives))
+            for archive_games in games:
+                for game in archive_games:
+                    for side in ("white", "black"):
+                        player = game.get(side)
+                        if not player:
+                            continue
+
                         username = player.get("username")
                         if username and username.lower() != USERNAME.lower():
                             new_opponents.add(username)
@@ -97,7 +109,7 @@ def main():
         print(f"Fetching countries for {len(opponents_to_fetch)} new opponents")
         # 🔥 Parallel requests
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = {executor.submit(fetch_country, session, opp): opp for opp in opponents_to_fetch}
+            futures = {executor.submit(fetch_country, opp): opp for opp in opponents_to_fetch}
 
             for future in as_completed(futures):
                 opp = futures[future]

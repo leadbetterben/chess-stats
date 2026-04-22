@@ -24,31 +24,6 @@ def is_current_month(url):
     now = datetime.datetime.now()
     return year == now.year and month == now.month
 
-def get_archives():
-    r = requests.get(f"{BASE_URL}/player/{USERNAME}/games/archives", headers=HEADERS)
-    return r.json().get("archives", [])
-
-def get_games(url):
-    r = requests.get(url, headers=HEADERS)
-    return r.json().get("games", [])
-
-def extract_opponents(archives):
-    opponents = set()
-
-    for archive_url in archives:
-        print(f"Fetching games: {archive_url}")
-        games = get_games(archive_url)
-
-        for game in games:
-            for side in ["white", "black"]:
-                player = game.get(side)
-                if player:
-                    username = player.get("username")
-                    if username and username.lower() != USERNAME.lower():
-                        opponents.add(username)
-
-    return opponents
-
 def fetch_country(opponent):
     try:
         r = requests.get(f"{BASE_URL}/player/{opponent}", headers=HEADERS, timeout=10)
@@ -67,7 +42,8 @@ def fetch_country(opponent):
     return "Unknown"
 
 def main():
-    archives = get_archives()
+    r = requests.get(f"{BASE_URL}/player/{USERNAME}/games/archives", headers=HEADERS)
+    archives = r.json().get("archives", [])
     fetched_archives = []
     if os.path.exists(ARCHIVES_FILE):
         with open(ARCHIVES_FILE, 'r') as f:
@@ -81,7 +57,18 @@ def main():
             opponents = set(json.load(f))
     
     if new_archives:
-        new_opponents = extract_opponents(new_archives)
+        new_opponents = set()
+        for url in new_archives:
+            print(f"Fetching games: {url}")
+            r = requests.get(url, headers=HEADERS)
+            games =  r.json().get("games", [])
+            for game in games:
+                for side in ["white", "black"]:
+                    player = game.get(side)
+                    if player:
+                        username = player.get("username")
+                        if username and username.lower() != USERNAME.lower():
+                            new_opponents.add(username)
         opponents.update(new_opponents)
         fetched_archives.extend([url for url in new_archives if not is_current_month(url)])
         

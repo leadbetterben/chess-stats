@@ -24,9 +24,9 @@ def is_current_month(url):
     now = datetime.datetime.now()
     return year == now.year and month == now.month
 
-def fetch_country(opponent):
+def fetch_country(session, opponent):
     try:
-        r = requests.get(f"{BASE_URL}/player/{opponent}", headers=HEADERS, timeout=10)
+        r = session.get(f"{BASE_URL}/player/{opponent}", headers=HEADERS, timeout=10)
         if r.status_code != 200:
             return "Unknown"
 
@@ -42,7 +42,10 @@ def fetch_country(opponent):
     return "Unknown"
 
 def main():
-    r = requests.get(f"{BASE_URL}/player/{USERNAME}/games/archives", headers=HEADERS)
+    session = requests.Session()
+    session.headers.update(HEADERS)
+
+    r = session.get(f"{BASE_URL}/player/{USERNAME}/games/archives", headers=HEADERS)
     archives = r.json().get("archives", [])
     fetched_archives = []
     if os.path.exists(ARCHIVES_FILE):
@@ -60,7 +63,7 @@ def main():
         new_opponents = set()
         for url in new_archives:
             print(f"Fetching games: {url}")
-            r = requests.get(url, headers=HEADERS)
+            r = session.get(url, headers=HEADERS)
             games =  r.json().get("games", [])
             for game in games:
                 for side in ["white", "black"]:
@@ -92,7 +95,7 @@ def main():
         print(f"Fetching countries for {len(opponents_to_fetch)} new opponents")
         # 🔥 Parallel requests
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = {executor.submit(fetch_country, opp): opp for opp in opponents_to_fetch}
+            futures = {executor.submit(fetch_country, session, opp): opp for opp in opponents_to_fetch}
 
             for future in as_completed(futures):
                 opp = futures[future]

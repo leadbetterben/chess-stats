@@ -1,9 +1,7 @@
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from chess_api.cache import save_json
-from chess_api.client import fetch_country, fetch_games
 from chess_api.processor import get_opponent_country_stats
+
 
 USERNAME = "benleggy23"
 

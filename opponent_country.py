@@ -36,9 +36,11 @@ def fetch_country(session, opponent):
         if country_url:
             return country_url.split("/")[-1]
 
-    except:
+    except Exception as e:
+        print(f"Error: exception fetching country for {opponent}: {e}")
         return "Unknown"
 
+    print(f"Error: No country found for {opponent}")
     return "Unknown"
 
 def main():
@@ -81,15 +83,15 @@ def main():
         with open(ARCHIVES_FILE, 'w') as f:
             json.dump(fetched_archives, f)
 
-    print(f"\nUnique opponents: {len(opponents)}")
-
     countries = {}
     if os.path.exists(COUNTRIES_FILE):
         with open(COUNTRIES_FILE, 'r') as f:
             countries = json.load(f)
 
-    # Find opponents without country
-    opponents_to_fetch = [opp for opp in opponents if opp not in countries]
+    print(f"\nUnique opponents: {len(opponents)}")
+
+    # Find opponents without country or with "Unknown" country
+    opponents_to_fetch = [opp for opp in opponents if opp not in countries or countries[opp] == "Unknown"]
     
     if opponents_to_fetch:
         print(f"Fetching countries for {len(opponents_to_fetch)} new opponents")
